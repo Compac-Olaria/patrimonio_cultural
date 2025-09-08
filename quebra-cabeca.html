@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Quebra-Cabeça - Patrimônio Cultural de Olaria/MG</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #5D4037;
+            --secondary-color: #8D6E63;
+            --accent-color: #795548;
+            --highlight-color: #722F37;
+            --success-color: #556B2F;
+            --bg-color: #F5F5DC;
+            --card-bg: #EFEBE9;
+            --text-color: #3E2723;
+            --border-color: #A1887F;
+            --bege-escuro: #E6D6B5;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+        
+        body {
+            font-family: 'Lato', sans-serif;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Merriweather', serif;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            padding: 15px;
+            margin: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Tela de Início e Fim (Base v18) */
+        .start-screen, .end-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: var(--bg-color);
+            padding: 35px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 650px;
+            width: 100%;
+            animation: slideIn 0.5s ease;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-title { font-size: 2rem; margin-bottom: 5px; }
+        .modal-subtitle { font-size: 1.2rem; margin-bottom: 15px; }
+        .modal-text { margin-bottom: 15px; line-height: 1.6; font-size: 1.1rem; }
+        .logo-container { text-align: center; margin-bottom: 10px; }
+        .logo-img { max-height: 70px; }
+        .difficulty-buttons { display: flex; gap: 12px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
+        
+        .btn-difficulty {
+            padding: 8px 16px; border: 2px solid var(--primary-color); background: white; color: var(--primary-color);
+            border-radius: 20px; transition: all 0.3s ease; cursor: pointer; font-weight: 700;
+        }
+        .btn-difficulty:hover, .btn-difficulty.active { background: var(--primary-color); color: white; }
+        
+        .btn-game {
+            background: var(--highlight-color); color: white; border: none; padding: 10px 20px; font-size: 1rem;
+            border-radius: 25px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(114, 47, 55, 0.3);
+            font-family: 'Lato', sans-serif; font-weight: 700; display: inline-block; width: auto; margin: 0 auto;
+        }
+        .btn-game:hover { background: var(--primary-color); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(93, 64, 55, 0.4); }
+        
+        .home-button-modal {
+            background: var(--highlight-color); color: #fff; border: none; border-radius: 50%; width: 40px; height: 40px;
+            font-size: 20px; cursor: pointer; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); display: flex; align-items: center;
+            justify-content: center; position: absolute; top: 15px; left: 15px; z-index: 1010;
+        }
+        
+        /* Layout da Tela do Jogo (Base v25) */
+        .game-container {
+            display: flex;
+            width: 100%;
+            height: 95vh;
+            max-height: 800px;
+            gap: 15px;
+        }
+
+        .sidebar {
+            background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 15px; padding: 15px;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 15px;
+            flex-shrink: 0;
+            width: 140px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .game-content { flex-grow: 1; display: flex; gap: 15px; height: 100%; }
+        
+        .puzzle-board-container {
+            flex: 2; display: flex; justify-content: center; align-items: center;
+            background: transparent; border: none; box-shadow: none; padding: 0;
+            position: relative;
+        }
+        
+        .puzzle-pieces-container {
+            flex: 1; display: flex; flex-direction: column; background: var(--card-bg); 
+            border-radius: 15px; border: 2px solid var(--border-color); 
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow-y: auto; overflow-x: hidden; padding: 15px;
+        }
+        
+        .sidebar-top { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+        
+        .controls-row, .game-stats { width: 100px; margin: 0 auto; }
+        .controls-row { display: flex; gap: 10px; justify-content: center; }
+        .game-stats { display: flex; flex-direction: column; gap: 12px; width: 100%; justify-content: center; }
+
+        .stat-box {
+            background: var(--primary-color); color: white; padding: 8px 10px; border-radius: 10px;
+            text-align: center; width: 100%; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .stat-label { font-size: 0.75rem; opacity: 0.9; }
+        .stat-value { font-size: 1.2rem; font-weight: bold; }
+        
+        .sidebar-bottom { width: 100%; text-align: center; display: flex; justify-content: center; }
+        
+        .btn-voltar {
+            background: var(--highlight-color); color: white; border: none; padding: 6px 12px;
+            font-size: 0.85rem; border-radius: 18px; transition: all 0.3s ease; 
+            box-shadow: 0 4px 8px rgba(114, 47, 55, 0.3);
+            font-weight: 700; width: auto; display: inline-block;
+        }
+        .btn-voltar:hover { background: var(--primary-color); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(93, 64, 55, 0.4); }
+        
+        .puzzle-board {
+            position: relative; background-color: var(--card-bg); border-radius: 6px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+            overflow: hidden; border: 2px solid var(--primary-color);
+            max-width: 100%; max-height: 100%;
+        }
+        
+        .puzzle-slot { position: absolute; border: 1px dashed var(--accent-color); background-color: rgba(114, 47, 55, 0.1); aspect-ratio: 1 / 1; }
+        
+        .puzzle-pieces { display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; padding: 5px; overflow-y: auto; overflow-x: hidden; align-content: flex-start; height: 100%; }
+        
+        .puzzle-piece {
+            cursor: grab; transition: all 0.3s ease; background-size: cover; background-position: center;
+            aspect-ratio: 1 / 1; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); border-radius: 4px; flex-shrink: 0;
+        }
+        .puzzle-piece:hover { transform: scale(1.05); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); }
+        .puzzle-pieces .puzzle-piece { width: var(--piece-size) !important; height: var(--piece-size) !important; }
+        
+        .sound-btn, .hint-btn {
+            display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; border-radius: 50%;
+            background-color: var(--primary-color); color: white; border: none; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .sound-btn:hover, .hint-btn:hover, .hint-btn.active { background-color: var(--highlight-color); }
+
+        /* Estilos da Tela Final (Base v18) */
+        .final-stats-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 8px 0; width: 100%; }
+        
+        .stat-inline {
+            background: var(--primary-color); color: white; padding: 8px 15px; border-radius: 10px;
+            text-align: center; min-width: 120px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease; border: 1px solid var(--secondary-color);
+            display: flex; flex-direction: row; align-items: center; justify-content: center;
+        }
+        
+        .stat-inline .stat-label { font-size: 1rem; opacity: .9; line-height: 1.2; font-weight: bold; margin-right: 5px; }
+        .stat-inline .stat-value { font-size: 1.1rem; font-weight: bold; }
+        
+        .patrimony-info {
+            background: var(--card-bg); padding: 12px; border-radius: 8px; margin: 10px 0;
+            text-align: left; border: 1px solid var(--border-color); width: 100%; font-size: 0.9rem;
+        }
+        .patrimony-info h4 { font-family: 'Merriweather', serif; color: var(--primary-color); margin-bottom: 4px; font-weight: bold; font-size: 0.95rem; display: inline; }
+        .patrimony-info p { display: inline; font-size: 0.8rem; margin: 0; }
+        
+        /* ROTAÇÃO PARA PAISAGEM EM DISPOSITIVOS MÓVEIS (Base v18) */
+        @media only screen and (orientation: portrait) and (max-width: 900px) {
+            html {
+                transform: rotate(90deg);
+                transform-origin: left top;
+                width: 100vh;
+                height: 100vw;
+                overflow-x: hidden;
+                position: absolute;
+                top: 0;
+                left: 100vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- TELA INICIAL (Base v18) -->
+    <div id="start-screen" class="start-screen">
+        <div class="modal-content">
+            <button class="home-button-modal" onclick="window.location.href='atividade.html'">
+                <i class="bi bi-house-door"></i>
+            </button>
+            <div class="logo-container">
+                <img src="Logo.png" alt="Logo de Olaria/MG" class="logo-img">
+            </div>
+            <h2 class="modal-title">Quebra-Cabeça</h2>
+            <p class="modal-text">
+                Descubra os tesouros do <strong>Patrimônio Cultural</strong> do município de <strong>Olaria/MG</strong>!<br>
+                Monte o quebra-cabeça e aprenda sobre nossos bens culturais.
+            </p>
+            <div class="difficulty-buttons">
+                <button class="btn-difficulty active" data-level="2">Iniciante (2x2)</button>
+                <button class="btn-difficulty" data-level="3">Fácil (3x3)</button>
+                <button class="btn-difficulty" data-level="4">Médio (4x4)</button>
+                <button class="btn-difficulty" data-level="5">Difícil (5x5)</button>
+            </div>
+            <button id="start-btn" class="btn btn-game">
+                <i class="bi bi-play-fill"></i> Iniciar Jogo
+            </button>
+        </div>
+    </div>
+    
+    <!-- TELA DO JOGO (Base v25) -->
+    <section id="game-screen" class="screen hidden">
+        <div class="game-container">
+            <aside class="sidebar">
+                <div class="sidebar-top">
+                    <div class="controls-row">
+                        <button id="sound-btn" class="sound-btn" title="Ligar/Desligar som"><i class="bi bi-volume-up-fill"></i></button>
+                        <button id="hint-btn" class="hint-btn" title="Mostrar imagem de referência"><i class="bi bi-eye-fill"></i></button>
+                    </div>
+                    <div class="game-stats">
+                        <div class="stat-box"><div class="stat-label">Movimentos</div><div class="stat-value" id="move-count">0</div></div>
+                        <div class="stat-box"><div class="stat-label">Tempo</div><div class="stat-value" id="timer">00:00</div></div>
+                    </div>
+                </div>
+                <div class="sidebar-bottom">
+                    <button id="restart-btn" class="btn-voltar"><i class="bi bi-arrow-left"></i> Voltar</button>
+                </div>
+            </aside>
+            <div class="game-content">
+                <div class="puzzle-board-container"><div id="puzzle-board" class="puzzle-board"></div></div>
+                <div class="puzzle-pieces-container" id="puzzle-pieces-container"><div id="puzzle-pieces" class="puzzle-pieces"></div></div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- TELA FINAL (Base v18) -->
+    <div id="end-screen" class="end-screen hidden">
+        <div class="modal-content">
+            <button class="home-button-modal" onclick="window.location.href='atividade.html'">
+                <i class="bi bi-house-door"></i>
+            </button>
+            <h2 class="modal-title">
+                <i class="bi bi-trophy-fill"></i> Parabéns!
+            </h2>
+            <p class="modal-subtitle">Você completou o jogo!</p>
+            
+            <div class="final-stats-container">
+                <div class="stat-inline">
+                    <div class="stat-label">Movimentos:</div>
+                    <div class="stat-value"><span id="final-move-count">0</span></div>
+                </div>
+                <div class="stat-inline">
+                    <div class="stat-label">Tempo:</div>
+                    <div class="stat-value"><span id="final-time">00:00</span></div>
+                </div>
+            </div>
+            
+            <div class="patrimony-info">
+                <h4>Curiosidades sobre o Patrimônio Cultural:</h4>
+                <p id="curiosity-text"></p>
+            </div>
+            
+            <button id="play-again-btn" class="btn btn-game">
+                <i class="bi bi-arrow-clockwise"></i> Jogar Novamente
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT (Base v25 com ajustes) -->
+    <script>
+        class SoundManager {
+            constructor() { this.audioContext = null; this.soundEnabled = true; this.initAudio(); }
+            initAudio() { try { this.audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { console.log('Web Audio API não suportada'); } }
+            toggleSound() { this.soundEnabled = !this.soundEnabled; return this.soundEnabled; }
+            playSound(frequency, duration, type = 'sine') { if (!this.audioContext || !this.soundEnabled) return; const o = this.audioContext.createOscillator(), g = this.audioContext.createGain(); o.connect(g); g.connect(this.audioContext.destination); o.frequency.value = frequency; o.type = type; g.gain.setValueAtTime(0.3, this.audioContext.currentTime); g.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration); o.start(this.audioContext.currentTime); o.stop(this.audioContext.currentTime + duration); }
+            playSelect() { this.playSound(800, 0.1); }
+            playCorrect() { this.playSound(600, 0.1); setTimeout(() => this.playSound(800, 0.1), 100); setTimeout(() => this.playSound(1000, 0.2), 200); }
+            playWrong() { this.playSound(300, 0.2, 'sawtooth'); }
+            playWin() { const notes = [523, 659, 784, 1047]; notes.forEach((note, i) => { setTimeout(() => this.playSound(note, 0.3), i * 150); }); }
+        }
+        const soundManager = new SoundManager();
+        
+        const culturalHeritages = [ 
+            { name: "Prédio Prefeitura Municipal", image: "Prefeitura.png", info: "O Prédio Prefeitura Municipal, foi construído em 1933 por iniciativa de Isaltino de Paula, para abrigar o Cinema 'Estrela Sul'." }, 
+            { name: "Imagem de Santo Antônio", image: "Imagem Santo Antonio.png", info: "A Imagem de Santo Antônio, possivelmente foi feita por volta de 1850, atualmente está exposta no Acervo do Museu Municipal João Elói." }, 
+            { name: "Corporação Musical 'Nova Aurora'", image: "Banda.png", info: "A Corporação Musical Olariense 'Nova Aurora', fundada em 24 de outubro de 1936." }, 
+            { name: "Cachoeira do Marciano", image: "Marciano.png", info: "A Cachoeira do Marciano, faz parte do Conjunto Paisagístico da Cachoeira do Marciano e está na área do Parque Estadual da Serra Negra da Mantiqueira." }, 
+            { name: "Igreja de São Sebastião da Vista Alegre", image: "Sebastiao.png", info: "A Igreja de São Sebastião da Vista Alegre foi construída no ano de 1936, por iniciativa de moradores locais." }, 
+            { name: "Acervo do Museu Municipal João Elói", image: "Museu.png", info: "O Acervo do Museu Municipal João Elói, começou em 1969, com as doações do acervo pessoal de Jesus de Oliveira, escritor e jornalista." }, 
+            { name: "Gincana Cultural de Olaria", image: "Gincana.png", info: "A primeira Gincana Cultural de Olaria foi criada por um grupo de alunos da Escola Estadual Ataualpa Duque em 1997." }, 
+            { name: "Cachoeira do Nariz", image: "Nariz.png", info: "A Cachoeira do Nariz, faz parte do Conjunto Paisagístico da Cachoeira do Marciano e está na área do Parque Estadual da Serra Negra da Mantiqueira." }, 
+            { name: "Igreja Matriz de Santo Antônio", image: "Igreja Matriz.png", info: "A Igreja Matriz de Santo Antônio foi inaugurada em 16/07/1872. Sua construção foi autorizada em 1869 a pedido do Coronel João Caetano Rodrigues." }, 
+            { name: "Reza para as Almas", image: "Reza.png", info: "A Reza para as Almas é uma manifestação popular, de caráter religioso, fundamenta na crença católica do purgatório." }, 
+            { name: "Capela Senhor dos Passos", image: "Capela.png", info: "Ao redor da Capela Senhor dos Passos existem montes de pedra feitos pelos fiéis como pagamento de promessas." }, 
+            { name: "Cachoeira do Pão de Angu", image: "Angu.png", info: "A Cachoeira do Pão de Angu, integra um Conjunto Paisagístico tombado, que possui trilhas centenárias que fazem parte da formação do município." } 
+        ];
+        
+        let currentLevel = 2, selectedHeritage, moves = 0, timerInterval, seconds = 0, minutes = 0, isHintActive = false, correctPieces = 0, totalPieces = 0, pieceSize;
+        
+        const startScreen = document.getElementById('start-screen'), gameScreen = document.getElementById('game-screen'), endScreen = document.getElementById('end-screen'),
+              difficultyButtons = document.querySelectorAll('.btn-difficulty'), startButton = document.getElementById('start-btn'), puzzleBoard = document.getElementById('puzzle-board'),
+              puzzlePiecesContainer = document.getElementById('puzzle-pieces-container'), puzzlePieces = document.getElementById('puzzle-pieces'), moveCountElement = document.getElementById('move-count'), timerElement = document.getElementById('timer'),
+              hintButton = document.getElementById('hint-btn'), soundButton = document.getElementById('sound-btn'), restartButton = document.getElementById('restart-btn'),
+              finalMoveCountElement = document.getElementById('final-move-count'), finalTimeElement = document.getElementById('final-time'),
+              curiosityTextElement = document.getElementById('curiosity-text'), playAgainButton = document.getElementById('play-again-btn');
+        
+        function init() {
+            difficultyButtons.forEach(button => { button.addEventListener('click', () => { difficultyButtons.forEach(btn => btn.classList.remove('active')); button.classList.add('active'); currentLevel = parseInt(button.getAttribute('data-level')); }); });
+            startButton.addEventListener('click', startGame);
+            hintButton.addEventListener('click', toggleHint);
+            soundButton.addEventListener('click', toggleSound);
+            restartButton.addEventListener('click', () => { stopTimer(); gameScreen.classList.add('hidden'); startScreen.classList.remove('hidden'); if (document.fullscreenElement) { exitFullscreen(); } });
+            playAgainButton.addEventListener('click', () => { endScreen.classList.add('hidden'); startScreen.classList.remove('hidden'); if (document.fullscreenElement) { exitFullscreen(); } });
+            
+            window.addEventListener('resize', () => {
+                if (!gameScreen.classList.contains('hidden')) {
+                     setTimeout(setupGame, 150); 
+                }
+            });
+
+            document.addEventListener('fullscreenchange', () => { 
+                if (!document.fullscreenElement && !gameScreen.classList.contains('hidden')) { 
+                    setupGame(); 
+                } 
+            });
+        }
+        
+        function exitFullscreen() { if (document.exitFullscreen) { document.exitFullscreen(); } else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); } else if (document.msExitFullscreen) { document.msExitFullscreen(); } }
+        
+        function toggleSound() {
+            const enabled = soundManager.toggleSound();
+            soundButton.innerHTML = enabled ? '<i class="bi bi-volume-up-fill"></i>' : '<i class="bi bi-volume-mute-fill"></i>';
+            if (enabled) soundManager.playSelect();
+        }
+        
+        function enterFullscreen() {
+            try {
+                if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen(); } 
+                else if (document.documentElement.webkitRequestFullscreen) { document.documentElement.webkitRequestFullscreen(); }
+                if (screen.orientation && screen.orientation.lock) { screen.orientation.lock('landscape').catch(err => console.log('Orientação não travada:', err)); }
+            } catch (e) { console.error('Erro tela cheia:', e); }
+        }
+        
+        function startGame() {
+            enterFullscreen();
+            selectedHeritage = culturalHeritages[Math.floor(Math.random() * culturalHeritages.length)];
+            startScreen.classList.add('hidden'); gameScreen.classList.remove('hidden');
+            setupGame(); startTimer();
+        }
+        
+        function setupGame() {
+            puzzleBoard.innerHTML = ''; puzzlePieces.innerHTML = '';
+            moves = 0; correctPieces = 0; moveCountElement.textContent = moves;
+            totalPieces = currentLevel * currentLevel;
+            
+            if (currentLevel === 3 || currentLevel === 5) {
+                puzzlePieces.style.flexDirection = "row";
+                puzzlePieces.style.flexWrap = "wrap";
+                puzzlePieces.style.justifyContent = "space-around";
+            } else {
+                puzzlePieces.style.flexDirection = "column";
+                puzzlePieces.style.flexWrap = "nowrap";
+                puzzlePieces.style.justifyContent = "flex-start";
+            }
+            
+            const boardContainer = document.querySelector('.puzzle-board-container');
+            const containerWidth = boardContainer.clientWidth;
+            const containerHeight = boardContainer.clientHeight;
+            
+            const boardSize = Math.min(containerWidth, containerHeight) * 0.95;
+            puzzleBoard.style.width = `${boardSize}px`; puzzleBoard.style.height = `${boardSize}px`;
+            pieceSize = boardSize / currentLevel;
+            document.documentElement.style.setProperty('--piece-size', `${pieceSize}px`);
+            
+            for (let row = 0; row < currentLevel; row++) {
+                for (let col = 0; col < currentLevel; col++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'puzzle-slot';
+                    slot.style.cssText = `width:${pieceSize}px; height:${pieceSize}px; top:${row * pieceSize}px; left:${col * pieceSize}px;`;
+                    slot.dataset.row = row; slot.dataset.col = col;
+                    puzzleBoard.appendChild(slot);
+                }
+            }
+            createPuzzlePieces();
+        }
+        
+        function createPuzzlePieces() {
+            const pieces = [];
+            for (let i = 0; i < totalPieces; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'puzzle-piece';
+                piece.style.backgroundImage = `url(${selectedHeritage.image})`;
+                const row = Math.floor(i / currentLevel), col = i % currentLevel;
+                piece.style.backgroundSize = `${currentLevel * 100}% ${currentLevel * 100}%`;
+                piece.style.backgroundPosition = `${(col / (currentLevel - 1)) * 100}% ${(row / (currentLevel - 1)) * 100}%`;
+                piece.dataset.index = i; piece.draggable = true;
+                piece.addEventListener('dragstart', dragStart);
+                pieces.push(piece);
+            }
+            shuffleArray(pieces).forEach(p => puzzlePieces.appendChild(p));
+            document.querySelectorAll('.puzzle-slot').forEach(slot => {
+                slot.addEventListener('dragover', e => e.preventDefault());
+                slot.addEventListener('drop', drop);
+            });
+        }
+        
+        function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
+        
+        function dragStart(e) { e.dataTransfer.setData('text/plain', e.target.dataset.index); soundManager.playSelect(); }
+        
+        function drop(e) {
+            e.preventDefault();
+            const pieceIndex = e.dataTransfer.getData('text/plain');
+            const piece = document.querySelector(`.puzzle-piece[data-index="${pieceIndex}"]`);
+            const slot = e.target;
+            
+            if (slot.classList.contains('puzzle-slot') && !slot.hasChildNodes()) {
+                const slotRow = parseInt(slot.dataset.row), slotCol = parseInt(slot.dataset.col);
+                const correctIndex = slotRow * currentLevel + slotCol;
+                
+                if (parseInt(pieceIndex) === correctIndex) {
+                    const bgImage = piece.style.backgroundImage;
+                    const bgSize = piece.style.backgroundSize;
+                    const bgPosition = piece.style.backgroundPosition;
+                    
+                    slot.appendChild(piece);
+                    piece.style.cssText = `position:absolute; top:0; left:0; margin:0; width:${pieceSize}px; height:${pieceSize}px;`;
+                    piece.style.backgroundImage = bgImage;
+                    piece.style.backgroundSize = bgSize;
+                    piece.style.backgroundPosition = bgPosition;
+                    
+                    piece.draggable = false;
+                    soundManager.playCorrect();
+                    correctPieces++;
+                    // *** ALTERAÇÃO AQUI: Aumentado o tempo antes de ir para a tela final ***
+                    if (correctPieces === totalPieces) { setTimeout(endGame, 3000); }
+                } else {
+                    soundManager.playWrong();
+                }
+                moves++; moveCountElement.textContent = moves;
+            }
+        }
+        
+        function toggleHint() {
+            isHintActive = !isHintActive;
+            let hintOverlay = document.getElementById('hint-overlay');
+            if (isHintActive) {
+                if (!hintOverlay) {
+                    hintOverlay = document.createElement('div');
+                    hintOverlay.id = 'hint-overlay';
+                    hintOverlay.style.cssText = `position:absolute; top:0; left:0; width:100%; height:100%; background-image:url(${selectedHeritage.image}); background-size:cover; opacity:0.3; z-index:5; pointer-events:none;`;
+                    puzzleBoard.appendChild(hintOverlay);
+                }
+                hintButton.classList.add('active');
+            } else {
+                if (hintOverlay) { puzzleBoard.removeChild(hintOverlay); }
+                hintButton.classList.remove('active');
+            }
+        }
+        
+        function startTimer() {
+            seconds = 0; minutes = 0; clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                seconds++; if (seconds === 60) { minutes++; seconds = 0; }
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+        
+        function stopTimer() { clearInterval(timerInterval); }
+        
+        function endGame() {
+            stopTimer();
+            finalMoveCountElement.textContent = moves; finalTimeElement.textContent = timerElement.textContent;
+            curiosityTextElement.textContent = selectedHeritage.info;
+            soundManager.playWin();
+            gameScreen.classList.add('hidden'); endScreen.classList.remove('hidden');
+        }
+        
+        window.addEventListener('load', init);
+    </script>
+    
+    <!-- SCRIPT AUXILIAR (Base v18) -->
+    <script>
+        // Dispara um evento de 'resize' após uma mudança de orientação.
+        // Isso garante que o jogo recalcule seu layout corretamente depois que o CSS
+        // força a rotação da tela.
+        window.addEventListener("orientationchange", function() {
+          setTimeout(function(){
+            window.dispatchEvent(new Event('resize'));
+          }, 200); 
+        });
+    </script>
+</body>
+</html>
+
